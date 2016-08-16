@@ -4,7 +4,7 @@ var Botkit = require('botkit');
 var request = require('request');
 
 
-if (!process.env.token) {
+if (!process.env.token || !process.env.githubtoken ) {
   console.log('Error: Specify token in environment');
   process.exit(1);
 }
@@ -49,7 +49,7 @@ controller.hears('fork (.*)', 'direct_message,direct_mention,mention', function 
         method: 'POST',
         uri: url + '/repos/' + repo + '/forks',
         headers: {
-          Authorization: 'token ca52cd93d6f7e66ed81d264bb89a19be8cfd71db',
+          Authorization: 'token ' + process.env.githubtoken,
           'content-type': 'application/json',
           'User-Agent': 'ndevr-deploy'
         }
