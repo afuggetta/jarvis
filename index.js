@@ -252,7 +252,7 @@ controller.hears(['List projects', 'List available projects', 'List repos', 'Lis
                                     default: true,
                                     callback: function (response, convo) {
                                         if (response) {
-                                            var api_url = response.text + '/api/v3/projects';
+                                            var api_url = response.text.slice(1, -1) + '/api/v3/projects';
                                             convo.say('Listing projects...');
                                             request(
                                                 {
