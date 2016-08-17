@@ -370,7 +370,7 @@ controller.hears('deploy (.*) to (.*)', 'direct_message,direct_mention,mention',
                             // process.exit(1);
                             convo.next();
                         }
-                        
+
                         request.post(
                             {
                                 url: github_api_url + '/repos/' + sourceRepo + '/pulls',
@@ -449,4 +449,3 @@ controller.hears('deploy (.*) to (.*)', 'direct_message,direct_mention,mention',
     });
 
 });
-// curl -H "Authorization: token e449a08e44f2bf84e4d327051a8ec2e9f06dcef6" -X POST -d '{"title": "Amazing new feature","body": "Please pull this in!","head": "master","base": "deploy-test"}' https://api.github.com/repos/ndevrinc/internet-retailer/pulls
