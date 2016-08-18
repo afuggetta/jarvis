@@ -113,7 +113,8 @@ controller.hears(['send me some money', 'give me money'],
                 if (info.user.profile.first_name) {
                     name = info.user.profile.first_name;
                 }
-                bot.reply(message, 'Sure, ' + name + '. Give me your bank details :troll: ...');
+                bot.replyPrivate(message, 'test');
+                // bot.reply(message, 'Sure, ' + name + '. Give me your bank details :troll: ...');
             }
         });
     }
@@ -340,13 +341,20 @@ controller.hears(['List projects', 'List available projects', 'List repos', 'Lis
 
 });
 
-
+/**
+ * Example: @jarvis deploy ndevrinc/internet-retailer to deploy-test -  @jarvis deploy ndevrinc/internet-retailer to deploy-live
+ *
+ * It will check your slack associated email against the hardcoded array of allowed users (we can think of something else)
+ * Will ask for a confirmation and, if confirmed, will call GitHub API creating a Pull request first and then merging it.
+ * This will trigger codeship to deploy to Pantheon.
+ *
+ */
 controller.hears('deploy (.*) to (.*)', 'direct_message,direct_mention,mention', function (bot, message) {
 
     var sourceRepo = message.match[1],
         baseBranch = message.match[2],
-        allowedBaseBranches = ['test', 'prod'],
-        allowedUsers = ['mdorman@ndevr.io', 'mhwang@ndevr.io', 'mcallari@ndevr.io', 'afuggetta@ndevr.io']; //Access levels to be added
+        allowedBaseBranches = ['deploy-test', 'deploy-live'],
+        allowedUsers = ['mdorman@ndevr.io', 'mhwang@ndevr.io', 'mcallari@ndevr.io', 'afuggetta@ndevr.io'];
 
     if (!baseBranch.indexOf(allowedBaseBranches)) {
         return bot.reply(message, 'I\'m sorry, Dave. I\'m afraid I can\'t do that.');
@@ -355,6 +363,8 @@ controller.hears('deploy (.*) to (.*)', 'direct_message,direct_mention,mention',
     bot.api.users.info({user: message.user}, function (err, info) {
         if (-1 === allowedUsers.indexOf(info.user.profile.email)) {
             bot.reply(message, 'You shall not pass!!!');
+        } else if (!process.env.githubtoken) {
+            bot.reply(message, 'Error: No token specified');
         } else {
             bot.startConversation(message, function (err, convo) {
                 if (!err) {
@@ -369,12 +379,6 @@ controller.hears('deploy (.*) to (.*)', 'direct_message,direct_mention,mention',
                         {
                             pattern: bot.utterances.yes,
                             callback: function (response, convo) {
-                                if (!process.env.githubtoken) {
-                                    bot.reply(message, 'Error: No token specified');
-                                    // process.exit(1);
-                                    convo.next();
-                                }
-
                                 request.post(
                                     {
                                         url: github_api_url + '/repos/' + sourceRepo + '/pulls',
@@ -384,10 +388,10 @@ controller.hears('deploy (.*) to (.*)', 'direct_message,direct_mention,mention',
                                             'User-Agent': 'ndevr-deploy'
                                         },
                                         json: {
-                                            "title": "Test from API",
-                                            "body": "Please do not pull this in yet!",
+                                            "title": "Deploying yo " + baseBranch,
+                                            "body": "This is an automated pull request from Jarvis Slack Bot",
                                             "head": "master",
-                                            "base": "deploy-test"
+                                            "base": baseBranch
                                         }
                                     },
                                     function (err, response, body) {
@@ -396,7 +400,7 @@ controller.hears('deploy (.*) to (.*)', 'direct_message,direct_mention,mention',
                                             var pr_number = body.number,
                                                 pr_sha = body.head.sha;
 
-                                            request.post(
+                                            request.put(
                                                 {
                                                     url: github_api_url + '/repos/' + sourceRepo + '/pulls/' + pr_number + '/merge',
                                                     headers: {
