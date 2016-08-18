@@ -346,105 +346,149 @@ controller.hears('deploy (.*) to (.*)', 'direct_message,direct_mention,mention',
     var sourceRepo = message.match[1],
         baseBranch = message.match[2],
         allowedBaseBranches = ['test', 'prod'],
-        allowedUsers = ['Matt', 'Meeky', 'Mike', 'Andrea']; //Access levels to be added
+        allowedUsers = ['mdorman@ndevr.io', 'mhwang@ndevr.io', 'mcallari@ndevr.io', 'afuggetta@ndevr.io']; //Access levels to be added
 
     if (!baseBranch.indexOf(allowedBaseBranches)) {
         return bot.reply(message, 'I\'m sorry, Dave. I\'m afraid I can\'t do that.');
     }
 
-    bot.startConversation(message, function (err, convo) {
-        if (!err) {
-            convo.ask('Are you sure you want to deploy ' + sourceRepo + ' to ' + baseBranch + '?', [
-                {
-                    pattern: 'done',
-                    callback: function (response, convo) {
-                        convo.say('OK you are done!');
-                        convo.next();
-                    }
-                },
-                {
-                    pattern: bot.utterances.yes,
-                    callback: function (response, convo) {
-                        if (!process.env.githubtoken) {
-                            bot.reply(message, 'Error: No token specified');
-                            // process.exit(1);
-                            convo.next();
-                        }
-
-                        request.post(
-                            {
-                                url: github_api_url + '/repos/' + sourceRepo + '/pulls',
-                                headers: {
-                                    Authorization: 'token ' + process.env.githubtoken,
-                                    'content-type': 'application/json',
-                                    'User-Agent': 'ndevr-deploy'
-                                },
-                                json: {
-                                    "title": "Test from API",
-                                    "body": "Please do not pull this in yet!",
-                                    "head": "master",
-                                    "base": "deploy-test"
-                                }
-                            },
-                            function (err, response, body) {
-                                if (!err && response.statusCode == 201) {
-
-                                    var attachments = {
-                                        "attachments": [
-                                            {
-                                                "fallback": "Pr created",
-                                                "color": "#36a64f",
-                                                "title": "Pr created",
-                                                "fields": [
-                                                    {
-                                                        "title": "ID: " + body.id,
-                                                        "value": body.html_url,
-                                                        "short": false
-                                                    }
-                                                ]
-                                            }
-                                        ]
-                                    };
-                                    bot.reply(message, attachments);
-
-                                    convo.next();
-                                } else {
-                                    bot.reply(message,
-                                        {
-                                            'attachments': [
-                                                {
-                                                    'fallback': 'Error...',
-                                                    'title': 'There was an error while creating a pull request:',
-                                                    'text': 'Status code: ' + response.statusCode + '.\nStatus message: ' + response.statusMessage,
-                                                    'color': '#FF0000'
-                                                }
-                                            ]
-                                        }
-                                    );
-                                }
-
+    bot.api.users.info({user: message.user}, function (err, info) {
+        if (-1 === allowedUsers.indexOf(info.user.profile.email)) {
+            bot.reply(message, 'You shall not pass!!!');
+        } else {
+            bot.startConversation(message, function (err, convo) {
+                if (!err) {
+                    convo.ask('Are you sure you want to deploy ' + sourceRepo + ' to ' + baseBranch + '?', [
+                        {
+                            pattern: 'done',
+                            callback: function (response, convo) {
+                                convo.say('OK you are done!');
+                                convo.next();
                             }
-                        );
-                    }
-                },
-                {
-                    pattern: bot.utterances.no,
-                    callback: function (response, convo) {
-                        convo.say('Perhaps later.');
-                        // do something else...
-                        convo.next();
-                    }
-                },
-                {
-                    default: true,
-                    callback: function (response, convo) {
-                        // just repeat the question
-                        convo.repeat();
-                        convo.next();
-                    }
-                }
-            ]);
+                        },
+                        {
+                            pattern: bot.utterances.yes,
+                            callback: function (response, convo) {
+                                if (!process.env.githubtoken) {
+                                    bot.reply(message, 'Error: No token specified');
+                                    // process.exit(1);
+                                    convo.next();
+                                }
 
+                                request.post(
+                                    {
+                                        url: github_api_url + '/repos/' + sourceRepo + '/pulls',
+                                        headers: {
+                                            Authorization: 'token ' + process.env.githubtoken,
+                                            'content-type': 'application/json',
+                                            'User-Agent': 'ndevr-deploy'
+                                        },
+                                        json: {
+                                            "title": "Test from API",
+                                            "body": "Please do not pull this in yet!",
+                                            "head": "master",
+                                            "base": "deploy-test"
+                                        }
+                                    },
+                                    function (err, response, body) {
+                                        if (!err && response.statusCode == 201) {
+
+                                            var pr_number = body.number,
+                                                pr_sha = body.head.sha;
+
+                                            request.post(
+                                                {
+                                                    url: github_api_url + '/repos/' + sourceRepo + '/pulls/' + pr_number + '/merge',
+                                                    headers: {
+                                                        Authorization: 'token ' + process.env.githubtoken,
+                                                        'content-type': 'application/json',
+                                                        'User-Agent': 'ndevr-deploy'
+                                                    },
+                                                    json: {
+                                                        "commit_message": "Jarvis is merging the pull request.",
+                                                        "sha": pr_sha
+                                                    }
+                                                },
+                                                function (err, response, body) {
+                                                    if (!err && response.statusCode == 200) {
+
+                                                        var attachments = {
+                                                            "attachments": [
+                                                                {
+                                                                    "fallback": "Merged into " + baseBranch,
+                                                                    "color": "#36a64f",
+                                                                    "title": "Merged into " + baseBranch,
+                                                                    "fields": [
+                                                                        {
+                                                                            "title": "Response",
+                                                                            "value": body.message,
+                                                                            "short": false
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        };
+                                                        bot.reply(message, attachments);
+
+                                                        convo.next();
+                                                    } else {
+                                                        bot.reply(message,
+                                                            {
+                                                                'attachments': [
+                                                                    {
+                                                                        'fallback': 'Error...',
+                                                                        'title': 'There was an error while merging the pull request:',
+                                                                        'text': 'Status code: ' + response.statusCode + '.\nStatus message: ' + response.statusMessage,
+                                                                        'color': '#FF0000'
+                                                                    }
+                                                                ]
+                                                            }
+                                                        );
+                                                    }
+
+                                                }
+                                            );
+
+                                            convo.next();
+                                        } else {
+                                            bot.reply(message,
+                                                {
+                                                    'attachments': [
+                                                        {
+                                                            'fallback': 'Error...',
+                                                            'title': 'There was an error while creating a pull request:',
+                                                            'text': 'Status code: ' + response.statusCode + '.\nStatus message: ' + response.statusMessage,
+                                                            'color': '#FF0000'
+                                                        }
+                                                    ]
+                                                }
+                                            );
+                                        }
+
+                                    }
+                                );
+                            }
+                        },
+                        {
+                            pattern: bot.utterances.no,
+                            callback: function (response, convo) {
+                                convo.say('Perhaps later.');
+                                // do something else...
+                                convo.next();
+                            }
+                        },
+                        {
+                            default: true,
+                            callback: function (response, convo) {
+                                // just repeat the question
+                                convo.repeat();
+                                convo.next();
+                            }
+                        }
+                    ]);
+
+                }
+            });
         }
     });
 
