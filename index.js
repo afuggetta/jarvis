@@ -108,8 +108,25 @@ controller.hears('who am i?', 'direct_message,direct_mention,mention', function 
 controller.hears('what day is it?', 'direct_message,direct_mention,mention', function (bot, message) {
     var date = new Date();
     var numberOfTheDay = date.getDay();
-    if (3 === numberOfTheDay) {
-        bot.reply(message, 'It\'s Mike Mike Mike Mike Mike day!');
+    var weekday = [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+    ];
+
+    var n = weekday[numberOfTheDay];
+
+    switch (n) {
+        case 'Wednesday':
+            bot.reply(message, 'It\'s Mike Mike Mike Mike Mike day!');
+            break;
+        default:
+            bot.reply(message, 'It\'s ' + weekday + '!');
+            break;
     }
 });
 
