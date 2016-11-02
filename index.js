@@ -374,10 +374,11 @@ controller.hears(['List projects', 'List available projects', 'List repos', 'Lis
  * This will trigger codeship to deploy to Pantheon.
  *
  */
-controller.hears('deploy (.*) to (.*)', 'direct_message,direct_mention,mention', function (bot, message) {
+controller.hears('deploy (.*) from (.*) to (.*)', 'direct_message,direct_mention,mention', function (bot, message) {
 
     var sourceRepo = message.match[1],
-        baseBranch = message.match[2],
+        headBranch = message.match[2],
+        baseBranch = message.match[3],
         allowedBaseBranches = ['deploy-test', 'deploy-live'],
         allowedUsers = ['mdorman@ndevr.io', 'mhwang@ndevr.io', 'mcallari@ndevr.io', 'afuggetta@ndevr.io'];
 
@@ -413,9 +414,9 @@ controller.hears('deploy (.*) to (.*)', 'direct_message,direct_mention,mention',
                                             'User-Agent': 'ndevr-deploy'
                                         },
                                         json: {
-                                            "title": "Deploying yo " + baseBranch,
+                                            "title": "Deploying to " + baseBranch,
                                             "body": "This is an automated pull request from Jarvis Slack Bot",
-                                            "head": "master",
+                                            "head": headBranch,
                                             "base": baseBranch
                                         }
                                     },
