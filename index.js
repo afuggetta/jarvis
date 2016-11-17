@@ -394,7 +394,7 @@ controller.hears('deploy (.*) from (.*) to (.*)', 'direct_message,direct_mention
         } else {
             bot.startConversation(message, function (err, convo) {
                 if (!err) {
-                    convo.ask('Are you sure you want to deploy ' + sourceRepo + ' to ' + baseBranch + '?', [
+                    convo.ask('Are you sure you want to deploy ' + sourceRepo + ' from ' + headBranch + ' to ' + baseBranch + '?', [
                         {
                             pattern: 'done',
                             callback: function (response, convo) {
