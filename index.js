@@ -144,6 +144,15 @@ controller.hears(['send me some money', 'give me money'],
     }
 );
 
+controller.hears(['are you done yet'], 'direct_message,direct_mention,mention', function (bot, message) {
+        bot.api.users.info({user: message.user}, function (err, info) {
+            if (!err) {
+                bot.reply(message, 'I am groot!');
+            }
+        });
+    }
+);
+
 controller.hears(['uptime', 'identify yourself', 'who are you', 'what is your name'],
     'direct_message,direct_mention,mention', function (bot, message) {
         function formatUptime(uptime) {
