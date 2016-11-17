@@ -138,8 +138,7 @@ controller.hears(['send me some money', 'give me money'],
                 if (info.user.profile.first_name) {
                     name = info.user.profile.first_name;
                 }
-                bot.replyPrivate(message, 'test');
-                // bot.reply(message, 'Sure, ' + name + '. Give me your bank details :troll: ...');
+                bot.reply(message, 'Sure, ' + name + '. Give me your bank details :troll: ...');
             }
         });
     }
