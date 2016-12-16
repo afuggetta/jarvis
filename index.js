@@ -144,7 +144,7 @@ controller.hears(['send me some money', 'give me money'],
     }
 );
 
-controller.hears(['are you done yet'], 'direct_message,direct_mention,mention', function (bot, message) {
+controller.hears(['are you done yet', 'is it done yet'], 'direct_message,direct_mention,mention', function (bot, message) {
         bot.api.users.info({user: message.user}, function (err, info) {
             if (!err) {
                 bot.reply(message, 'I am groot!');
