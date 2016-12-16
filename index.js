@@ -388,7 +388,7 @@ controller.hears('deploy (.*) from (.*) to (.*)', 'direct_message,direct_mention
         headBranch = message.match[2],
         baseBranch = message.match[3],
         allowedBaseBranches = ['deploy-test', 'deploy-live'],
-        allowedUsers = ['mdorman@ndevr.io', 'mhwang@ndevr.io', 'mcallari@ndevr.io', 'afuggetta@ndevr.io'];
+        allowedUsers = ['mdorman@ndevr.io', 'matthewdorman@gmail.com', 'mhwang@ndevr.io', 'meekyhwang@gmail.com', 'mcallari@ndevr.io', 'afuggetta@ndevr.io'];
 
     if (!baseBranch.indexOf(allowedBaseBranches)) {
         return bot.reply(message, 'I\'m sorry, Dave. I\'m afraid I can\'t do that.');
