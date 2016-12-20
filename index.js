@@ -531,3 +531,52 @@ controller.hears('deploy (.*) from (.*) to (.*)', 'direct_message,direct_mention
     });
 
 });
+
+controller.hears(['Get GitHub API rates'], 'direct_message,direct_mention,mention', function (bot, message) {
+    var api_url = github_api_url + '/rate_limit';
+    request(
+        {
+            method: 'GET',
+            uri: api_url,
+            headers: {
+                'PRIVATE-TOKEN': process.env.gitlab_token
+            }
+        },
+        function (error, response, body) {
+            if (!error && response.statusCode == 200) {
+                var rates = JSON.parse(body);
+
+                if (0 == rates.length) {
+                    convo.say('No rates found');
+                } else {
+
+                    var attachments = {
+                        "attachments": [
+                            {
+                                "fallback": "Rates",
+                                "color": "#36a64f",
+                                "title": "Rates",
+                                "fields": rates
+                            }
+                        ]
+                    };
+                    bot.reply(message, attachments);
+                }
+            }
+            else {
+                bot.reply(message,
+                    {
+                        'attachments': [
+                            {
+                                'fallback': 'Error...',
+                                'title': 'There was an error while listing the repositories',
+                                'text': 'Status code: ' + response.statusCode + '.\nStatus message: ' + response.statusMessage,
+                                'color': '#FF0000'
+                            }
+                        ]
+                    }
+                );
+            }
+        }
+    );
+});
