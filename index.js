@@ -539,7 +539,7 @@ controller.hears(['Get GitHub API rates'], 'direct_message,direct_mention,mentio
             method: 'GET',
             uri: api_url,
             headers: {
-                'PRIVATE-TOKEN': process.env.gitlab_token
+                'PRIVATE-TOKEN': process.env.githubtoken
             }
         },
         function (error, response, body) {
