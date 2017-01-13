@@ -121,6 +121,9 @@ controller.hears('what day is it?', 'direct_message,direct_mention,mention', fun
     var n = weekday[numberOfTheDay];
 
     switch (n) {
+        case 'Friday':
+            bot.reply(message, 'It\'s Monday, have a great weekend!');
+            break;
         case 'Wednesday':
             bot.reply(message, 'It\'s Mike Mike Mike Mike Mike day!');
             break;
