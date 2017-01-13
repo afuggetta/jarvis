@@ -434,66 +434,67 @@ controller.hears('deploy (.*) from (.*) to (.*)', 'direct_message,direct_mention
                                     },
                                     function (err, response, body) {
                                         if (!err && response.statusCode == 201) {
+                                            // setTimeout(function () {
+                                                var pr_number = body.number,
+                                                    pr_sha = body.head.sha;
 
-                                            var pr_number = body.number,
-                                                pr_sha = body.head.sha;
-
-                                            request(
-                                                {
-                                                    method: "PUT",
-                                                    url: github_api_url + '/repos/' + sourceRepo + '/pulls/' + pr_number + '/merge',
-                                                    headers: {
-                                                        Authorization: 'token ' + process.env.githubtoken,
-                                                        'cache-control': 'no-cache',
-                                                        'content-type': 'application/json',
-                                                        'User-Agent': 'ndevr-deploy'
+                                                request.put(
+                                                    {
+                                                        url: github_api_url + '/repos/' + sourceRepo + '/pulls/' + pr_number + '/merge',
+                                                        headers: {
+                                                            Authorization: 'token ' + process.env.githubtoken,
+                                                            'cache-control': 'no-cache',
+                                                            'content-type': 'application/json',
+                                                            'User-Agent': 'ndevr-deploy'
+                                                        },
+                                                        json: {
+                                                            "commit_message": "Jarvis is merging the pull request.",
+                                                            "sha": pr_sha
+                                                        }
                                                     },
-                                                    json: {
-                                                        "commit_message": "Jarvis is merging the pull request.",
-                                                        "sha": pr_sha
-                                                    }
-                                                },
-                                                function (err, response, body) {
-                                                    if (!err && response.statusCode == 200) {
+                                                    function (err, response, body) {
+                                                        if (!err && response.statusCode == 200) {
 
-                                                        var attachments = {
-                                                            "attachments": [
+                                                            var attachments = {
+                                                                "attachments": [
+                                                                    {
+                                                                        "fallback": "Merged into " + baseBranch,
+                                                                        "color": "#36a64f",
+                                                                        "title": "Merged into " + baseBranch,
+                                                                        "fields": [
+                                                                            {
+                                                                                "title": "Response",
+                                                                                "value": body.message,
+                                                                                "short": false
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                ]
+                                                            };
+                                                            bot.reply(message, attachments);
+
+                                                            convo.next();
+                                                        } else {
+                                                            bot.reply(message,
                                                                 {
-                                                                    "fallback": "Merged into " + baseBranch,
-                                                                    "color": "#36a64f",
-                                                                    "title": "Merged into " + baseBranch,
-                                                                    "fields": [
+                                                                    'attachments': [
                                                                         {
-                                                                            "title": "Response",
-                                                                            "value": body.message,
-                                                                            "short": false
+                                                                            'fallback': 'Error...',
+                                                                            'title': 'There was an error while merging the pull request:',
+                                                                            'text': 'Status code: ' + response.statusCode + '.\nStatus message: ' + response.statusMessage,
+                                                                            'color': '#FF0000'
                                                                         }
                                                                     ]
                                                                 }
-                                                            ]
-                                                        };
-                                                        bot.reply(message, attachments);
+                                                            );
+                                                        }
 
-                                                        convo.next();
-                                                    } else {
-                                                        bot.reply(message,
-                                                            {
-                                                                'attachments': [
-                                                                    {
-                                                                        'fallback': 'Error...',
-                                                                        'title': 'There was an error while merging the pull request:',
-                                                                        'text': 'Status code: ' + response.statusCode + '.\nStatus message: ' + response.statusMessage,
-                                                                        'color': '#FF0000'
-                                                                    }
-                                                                ]
-                                                            }
-                                                        );
                                                     }
+                                                );
 
-                                                }
-                                            );
+                                                convo.next();
+                                            // }, 2000);
 
-                                            convo.next();
                                         } else {
                                             bot.reply(message,
                                                 {
