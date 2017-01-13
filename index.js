@@ -121,6 +121,9 @@ controller.hears('what day is it?', 'direct_message,direct_mention,mention', fun
     var n = weekday[numberOfTheDay];
 
     switch (n) {
+        case 'Friday':
+            bot.reply(message, 'It\'s Monday, have a great weekend!');
+            break;
         case 'Wednesday':
             bot.reply(message, 'It\'s Mike Mike Mike Mike Mike day!');
             break;
@@ -435,8 +438,9 @@ controller.hears('deploy (.*) from (.*) to (.*)', 'direct_message,direct_mention
                                             var pr_number = body.number,
                                                 pr_sha = body.head.sha;
 
-                                            request.put(
+                                            request(
                                                 {
+                                                    method: "PUT",
                                                     url: github_api_url + '/repos/' + sourceRepo + '/pulls/' + pr_number + '/merge',
                                                     headers: {
                                                         Authorization: 'token ' + process.env.githubtoken,
@@ -507,6 +511,120 @@ controller.hears('deploy (.*) from (.*) to (.*)', 'direct_message,direct_mention
 
                                     }
                                 );
+                            }
+                        },
+                        {
+                            pattern: bot.utterances.no,
+                            callback: function (response, convo) {
+                                convo.say('Perhaps later.');
+                                // do something else...
+                                convo.next();
+                            }
+                        },
+                        {
+                            default: true,
+                            callback: function (response, convo) {
+                                // just repeat the question
+                                convo.repeat();
+                                convo.next();
+                            }
+                        }
+                    ]);
+
+                }
+            });
+        }
+    });
+
+});
+
+/**
+ * Example: @jarvis deploy ndevrinc/internet-retailer to deploy-test -  @jarvis deploy ndevrinc/internet-retailer to deploy-live
+ *
+ * It will check your slack associated email against the hardcoded array of allowed users (we can think of something else)
+ * Will ask for a confirmation and, if confirmed, will call GitHub API creating a Pull request first and then merging it.
+ * This will trigger codeship to deploy to Pantheon.
+ *
+ */
+controller.hears('merge pr (.*) from (.*) sha (.*)', 'direct_message,direct_mention,mention', function (bot, message) {
+
+    var allowedUsers = ['mdorman@ndevr.io', 'matthewdorman@gmail.com', 'mhwang@ndevr.io', 'meekyhwang@gmail.com', 'mcallari@ndevr.io', 'afuggetta@ndevr.io'];
+
+    bot.api.users.info({user: message.user}, function (err, info) {
+        if (-1 === allowedUsers.indexOf(info.user.profile.email)) {
+            bot.reply(message, 'You shall not pass!!!');
+        } else if (!process.env.githubtoken) {
+            bot.reply(message, 'Error: No token specified');
+        } else {
+            bot.startConversation(message, function (err, convo) {
+                if (!err) {
+                    convo.ask('Are you sure you want to merge?', [
+                        {
+                            pattern: 'done',
+                            callback: function (response, convo) {
+                                convo.say('OK you are done!');
+                                convo.next();
+                            }
+                        },
+                        {
+                            pattern: bot.utterances.yes,
+                            callback: function (response, convo) {
+                                request(
+                                    {
+                                        method: "PUT",
+                                        url: github_api_url + '/repos/' + message.match[2] + '/pulls/' + message.match[1] + '/merge',
+                                        headers: {
+                                            Authorization: 'token ' + process.env.githubtoken,
+                                            'cache-control': 'no-cache',
+                                            'content-type': 'application/json',
+                                            'User-Agent': 'ndevr-deploy'
+                                        },
+                                        json: {
+                                            "commit_message": "Jarvis is merging the pull request.",
+                                            "sha": message.match[3]
+                                        }
+                                    },
+                                    function (err, response, body) {
+                                        if (!err && response.statusCode == 200) {
+
+                                            var attachments = {
+                                                "attachments": [
+                                                    {
+                                                        "fallback": "PR Merged",
+                                                        "color": "#36a64f",
+                                                        "title": "PR Merged",
+                                                        "fields": [
+                                                            {
+                                                                "title": "Response",
+                                                                "value": body.message,
+                                                                "short": false
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            };
+                                            bot.reply(message, attachments);
+
+                                            convo.next();
+                                        } else {
+                                            bot.reply(message,
+                                                {
+                                                    'attachments': [
+                                                        {
+                                                            'fallback': 'Error...',
+                                                            'title': 'There was an error while merging the pull request:',
+                                                            'text': 'Status code: ' + response.statusCode + '.\nStatus message: ' + response.statusMessage,
+                                                            'color': '#FF0000'
+                                                        }
+                                                    ]
+                                                }
+                                            );
+                                        }
+
+                                    }
+                                );
+
+                                convo.next();
                             }
                         },
                         {
