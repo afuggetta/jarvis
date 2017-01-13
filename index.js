@@ -125,7 +125,7 @@ controller.hears('what day is it?', 'direct_message,direct_mention,mention', fun
             bot.reply(message, 'It\'s Mike Mike Mike Mike Mike day!');
             break;
         default:
-            bot.reply(message, 'It\'s ' + weekday + '!');
+            bot.reply(message, 'It\'s ' + n + '!');
             break;
     }
 });
