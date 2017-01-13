@@ -539,7 +539,7 @@ controller.hears(['Get GitHub API rates'], 'direct_message,direct_mention,mentio
             method: 'GET',
             uri: api_url,
             headers: {
-                'PRIVATE-TOKEN': process.env.githubtoken
+                Authorization: 'token ' + process.env.githubtoken,
             }
         },
         function (error, response, body) {
@@ -588,7 +588,7 @@ controller.hears(['List IR pull requests'], 'direct_message,direct_mention,menti
             method: 'GET',
             uri: api_url,
             headers: {
-                'PRIVATE-TOKEN': process.env.gitlab_token
+                Authorization: 'token ' + process.env.githubtoken,
             }
         },
         function (error, response, body) {
