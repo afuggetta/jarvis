@@ -418,6 +418,7 @@ controller.hears('deploy (.*) from (.*) to (.*)', 'direct_message,direct_mention
                                         url: github_api_url + '/repos/' + sourceRepo + '/pulls',
                                         headers: {
                                             Authorization: 'token ' + process.env.githubtoken,
+                                            'cache-control': 'no-cache',
                                             'content-type': 'application/json',
                                             'User-Agent': 'ndevr-deploy'
                                         },
@@ -434,11 +435,13 @@ controller.hears('deploy (.*) from (.*) to (.*)', 'direct_message,direct_mention
                                             var pr_number = body.number,
                                                 pr_sha = body.head.sha;
 
-                                            request.put(
+                                            request(
                                                 {
+                                                    method: 'PUT',
                                                     url: github_api_url + '/repos/' + sourceRepo + '/pulls/' + pr_number + '/merge',
                                                     headers: {
                                                         Authorization: 'token ' + process.env.githubtoken,
+                                                        'cache-control': 'no-cache',
                                                         'content-type': 'application/json',
                                                         'User-Agent': 'ndevr-deploy'
                                                     },
@@ -537,9 +540,12 @@ controller.hears(['Get GitHub API rates'], 'direct_message,direct_mention,mentio
     request(
         {
             method: 'GET',
-            uri: api_url,
+            url: api_url,
             headers: {
-                Authorization: 'token ' + process.env.githubtoken,
+                'cache-control': 'no-cache',
+                'content-type': 'application/json',
+                'user-agent': 'ndevr-deploy',
+                authorization: 'token e449a08e44f2bf84e4d327051a8ec2e9f06dcef6'
             }
         },
         function (error, response, body) {
@@ -556,7 +562,7 @@ controller.hears(['Get GitHub API rates'], 'direct_message,direct_mention,mentio
                                 "fallback": "Rates",
                                 "color": "#36a64f",
                                 "title": "Rates",
-                                "fields": rates
+                                'text': 'Limit: ' + rates.rate.limit + '.\nRemaining: ' + rates.rate.remaining + '.\nReset: ' + rates.rate.reset
                             }
                         ]
                     };
@@ -570,65 +576,6 @@ controller.hears(['Get GitHub API rates'], 'direct_message,direct_mention,mentio
                             {
                                 'fallback': 'Error...',
                                 'title': 'There was an error while listing the rates',
-                                'text': 'Status code: ' + response.statusCode + '.\nStatus message: ' + response.statusMessage,
-                                'color': '#FF0000'
-                            }
-                        ]
-                    }
-                );
-            }
-        }
-    );
-});
-
-controller.hears(['List IR pull requests'], 'direct_message,direct_mention,mention', function (bot, message) {
-    var api_url = github_api_url + '/repos/ndevrinc/internet-retailer/pulls';
-    request(
-        {
-            method: 'GET',
-            uri: api_url,
-            headers: {
-                Authorization: 'token ' + process.env.githubtoken,
-            }
-        },
-        function (error, response, body) {
-            if (!error && response.statusCode == 200) {
-                var PR = JSON.parse(body);
-
-                if (0 == PR.length) {
-                    convo.say('No PR found');
-                } else {
-                    var fields = [],
-                        temp;
-                    for (var i = 0; i < PR.length; i++) {
-                        temp = {
-                            "ID": PR[i].id,
-                            "Title": PR[i].title,
-                            "URL": PR[i].url,
-                            "short": false
-                        };
-                        fields.push(temp);
-                    }
-                    var attachments = {
-                        "attachments": [
-                            {
-                                "fallback": "Pull requests",
-                                "color": "#36a64f",
-                                "title": "Pull requests",
-                                "fields": fields
-                            }
-                        ]
-                    };
-                    bot.reply(message, attachments);
-                }
-            }
-            else {
-                bot.reply(message,
-                    {
-                        'attachments': [
-                            {
-                                'fallback': 'Error...',
-                                'title': 'There was an error while listing the pull requests',
                                 'text': 'Status code: ' + response.statusCode + '.\nStatus message: ' + response.statusMessage,
                                 'color': '#FF0000'
                             }
