@@ -434,7 +434,7 @@ controller.hears('deploy (.*) from (.*) to (.*)', 'direct_message,direct_mention
                                     },
                                     function (err, response, body) {
                                         if (!err && response.statusCode == 201) {
-                                            // setTimeout(function () {
+                                            setTimeout(function () {
                                                 var pr_number = body.number,
                                                     pr_sha = body.head.sha;
 
@@ -493,7 +493,7 @@ controller.hears('deploy (.*) from (.*) to (.*)', 'direct_message,direct_mention
                                                 );
 
                                                 convo.next();
-                                            // }, 2000);
+                                            }, 2000);
 
                                         } else {
                                             bot.reply(message,
