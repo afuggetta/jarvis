@@ -435,9 +435,8 @@ controller.hears('deploy (.*) from (.*) to (.*)', 'direct_message,direct_mention
                                             var pr_number = body.number,
                                                 pr_sha = body.head.sha;
 
-                                            request(
+                                            request.put(
                                                 {
-                                                    method: 'PUT',
                                                     url: github_api_url + '/repos/' + sourceRepo + '/pulls/' + pr_number + '/merge',
                                                     headers: {
                                                         Authorization: 'token ' + process.env.githubtoken,
@@ -545,7 +544,7 @@ controller.hears(['Get GitHub API rates'], 'direct_message,direct_mention,mentio
                 'cache-control': 'no-cache',
                 'content-type': 'application/json',
                 'user-agent': 'ndevr-deploy',
-                authorization: 'token e449a08e44f2bf84e4d327051a8ec2e9f06dcef6'
+                authorization: 'token ' + process.env.githubtoken
             }
         },
         function (error, response, body) {
