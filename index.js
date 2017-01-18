@@ -493,7 +493,7 @@ controller.hears('deploy (.*) from (.*) to (.*)', 'direct_message,direct_mention
                                                 );
 
                                                 convo.next();
-                                            }, 2000);
+                                            }, 5000);
 
                                         } else {
                                             bot.reply(message,
